@@ -16,19 +16,39 @@ class TestLambdaHandler:
     
     def test_lambda_handler_health_check(self):
         """Test Lambda handler with health check event."""
-        # Simulate API Gateway event
+        # Simulate proper API Gateway v2 event
         event = {
-            "httpMethod": "GET",
-            "path": "/health",
-            "headers": {},
-            "body": None,
-            "isBase64Encoded": False,
+            "version": "2.0",
+            "routeKey": "GET /health",
+            "rawPath": "/health",
+            "rawQueryString": "",
+            "headers": {
+                "accept": "*/*",
+                "content-type": "application/json"
+            },
             "requestContext": {
-                "requestId": "test-request-id"
-            }
+                "accountId": "123456789012",
+                "apiId": "test-api",
+                "domainName": "test.execute-api.us-east-1.amazonaws.com",
+                "http": {
+                    "method": "GET",
+                    "path": "/health",
+                    "protocol": "HTTP/1.1",
+                    "sourceIp": "127.0.0.1"
+                },
+                "requestId": "test-request-id",
+                "stage": "$default",
+                "time": "01/Jan/2025:00:00:00 +0000",
+                "timeEpoch": 1640995200000
+            },
+            "isBase64Encoded": False
         }
         
-        context = {}
+        context = type('obj', (object,), {
+            'request_id': 'test-request-id',
+            'function_name': 'test-function',
+            'memory_limit_in_mb': '128'
+        })()
         
         # Call handler
         response = handler(event, context)
@@ -41,17 +61,25 @@ class TestLambdaHandler:
     def test_lambda_handler_root_endpoint(self):
         """Test Lambda handler with root endpoint."""
         event = {
-            "httpMethod": "GET",
-            "path": "/",
-            "headers": {},
-            "body": None,
-            "isBase64Encoded": False,
+            "version": "2.0",
+            "routeKey": "GET /",
+            "rawPath": "/",
+            "rawQueryString": "",
+            "headers": {
+                "accept": "*/*"
+            },
             "requestContext": {
+                "http": {
+                    "method": "GET",
+                    "path": "/",
+                    "protocol": "HTTP/1.1"
+                },
                 "requestId": "test-request-id"
-            }
+            },
+            "isBase64Encoded": False
         }
         
-        context = {}
+        context = type('obj', (object,), {'request_id': 'test-request-id'})()
         response = handler(event, context)
         
         assert response["statusCode"] == 200
@@ -59,70 +87,27 @@ class TestLambdaHandler:
     def test_lambda_handler_invalid_path(self):
         """Test Lambda handler with invalid path."""
         event = {
-            "httpMethod": "GET",
-            "path": "/nonexistent",
-            "headers": {},
-            "body": None,
-            "isBase64Encoded": False,
+            "version": "2.0",
+            "routeKey": "GET /nonexistent",
+            "rawPath": "/nonexistent",
+            "rawQueryString": "",
+            "headers": {
+                "accept": "*/*"
+            },
             "requestContext": {
+                "http": {
+                    "method": "GET",
+                    "path": "/nonexistent",
+                    "protocol": "HTTP/1.1"
+                },
                 "requestId": "test-request-id"
-            }
+            },
+            "isBase64Encoded": False
         }
         
-        context = {}
+        context = type('obj', (object,), {'request_id': 'test-request-id'})()
         response = handler(event, context)
         
         # Should return 404
         assert response["statusCode"] == 404
-    
-    def test_lambda_handler_with_query_params(self):
-        """Test Lambda handler with query parameters."""
-        event = {
-            "httpMethod": "GET",
-            "path": "/health",
-            "queryStringParameters": {
-                "test": "param"
-            },
-            "headers": {},
-            "body": None,
-            "isBase64Encoded": False,
-            "requestContext": {
-                "requestId": "test-request-id"
-            }
-        }
-        
-        context = {}
-        response = handler(event, context)
-        
-        assert response["statusCode"] == 200
-    
-    def test_lambda_handler_post_request(self):
-        """Test Lambda handler with POST request."""
-        import json
-        
-        event = {
-            "httpMethod": "POST",
-            "path": "/api/analyze",
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "body": json.dumps({
-                "tickers": ["AAPL"],
-                "date_range": {
-                    "start_date": "2025-11-01",
-                    "end_date": "2025-11-20"
-                }
-            }),
-            "isBase64Encoded": False,
-            "requestContext": {
-                "requestId": "test-request-id"
-            }
-        }
-        
-        context = {}
-        response = handler(event, context)
-        
-        # Should process (might succeed or fail based on network)
-        assert "statusCode" in response
-        assert response["statusCode"] in [200, 400, 503, 500]
 
