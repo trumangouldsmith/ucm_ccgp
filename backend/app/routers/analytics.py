@@ -15,9 +15,25 @@ from app.services.yahoo_finance import (
     DataFetchError
 )
 from app.services.analytics import AnalyticsService
+from app.services.cache import CacheService
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Initialize cache service if enabled
+cache_service = None
+if settings.ENABLE_CACHE and not settings.USE_LOCAL_CACHE:
+    try:
+        cache_service = CacheService(
+            bucket_name=settings.CACHE_BUCKET_NAME,
+            ttl_hours=settings.CACHE_TTL_HOURS,
+            region_name=settings.AWS_REGION
+        )
+        logger.info("Cache service initialized")
+    except Exception as e:
+        logger.warning(f"Failed to initialize cache service: {str(e)}")
+        cache_service = None
 
 
 @router.post("/analyze", response_model=StockAnalysisResponse, status_code=status.HTTP_200_OK)
@@ -42,6 +58,39 @@ async def analyze_stocks(request: StockAnalysisRequest):
     """
     request_id = str(uuid.uuid4())
     logger.info(f"Processing analysis request {request_id} for tickers: {request.tickers}")
+    
+    # Generate cache key
+    cache_key = None
+    cached_data = None
+    
+    if cache_service:
+        cache_key = CacheService.generate_cache_key(
+            tickers=request.tickers,
+            start_date=str(request.date_range.start_date),
+            end_date=str(request.date_range.end_date),
+            interval=request.interval
+        )
+        
+        # Try to get from cache
+        cached_data = cache_service.get(cache_key)
+        
+        if cached_data:
+            logger.info(f"Returning cached results for request {request_id}")
+            
+            # Reconstruct metrics from cached data
+            metrics = {
+                ticker: StockMetrics(**metric_data)
+                for ticker, metric_data in cached_data['metrics'].items()
+            }
+            
+            return StockAnalysisResponse(
+                request_id=request_id,
+                tickers=cached_data['tickers'],
+                metrics=metrics,
+                correlation_matrix=cached_data.get('correlation_matrix'),
+                cached=True,
+                timestamp=datetime.utcnow()
+            )
     
     try:
         # Fetch historical data for all tickers
@@ -73,6 +122,18 @@ async def analyze_stocks(request: StockAnalysisRequest):
             correlation_matrix = AnalyticsService.calculate_correlation_matrix(stock_data)
         
         logger.info(f"Successfully analyzed {len(metrics)} tickers")
+        
+        # Cache the results
+        if cache_service and cache_key:
+            cache_data = {
+                'tickers': list(stock_data.keys()),
+                'metrics': {
+                    ticker: metric.dict()
+                    for ticker, metric in metrics.items()
+                },
+                'correlation_matrix': correlation_matrix
+            }
+            cache_service.set(cache_key, cache_data)
         
         return StockAnalysisResponse(
             request_id=request_id,
@@ -113,6 +174,63 @@ async def test_endpoint():
     """
     return {
         "message": "Analytics router is working!",
-        "endpoints": ["/api/analyze"]
+        "endpoints": ["/api/analyze", "/api/cache/stats", "/api/cache/clear"]
     }
+
+
+@router.get("/cache/stats")
+async def get_cache_stats():
+    """
+    Get cache statistics.
+    
+    Returns:
+        dict: Cache statistics (count, size, etc.)
+    """
+    if not cache_service:
+        return {
+            "cache_enabled": False,
+            "message": "Cache is not enabled"
+        }
+    
+    try:
+        stats = cache_service.get_cache_stats()
+        return {
+            "cache_enabled": True,
+            **stats
+        }
+    except Exception as e:
+        logger.error(f"Error getting cache stats: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get cache stats: {str(e)}"
+        )
+
+
+@router.delete("/cache/clear")
+async def clear_cache():
+    """
+    Clear all cached data.
+    
+    Returns:
+        dict: Number of items cleared
+    """
+    if not cache_service:
+        return {
+            "cache_enabled": False,
+            "message": "Cache is not enabled"
+        }
+    
+    try:
+        count = cache_service.clear_all()
+        return {
+            "cache_enabled": True,
+            "items_cleared": count,
+            "message": f"Cleared {count} cache entries"
+        }
+    except Exception as e:
+        logger.error(f"Error clearing cache: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to clear cache: {str(e)}"
+        )
 

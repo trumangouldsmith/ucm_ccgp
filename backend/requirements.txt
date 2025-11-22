@@ -11,7 +11,7 @@ numpy
 yfinance
 
 # AWS SDK for S3 caching (Task 5)
-# boto3
+boto3==1.34.9
 
 # Lambda deployment (Task 6)
 # mangum

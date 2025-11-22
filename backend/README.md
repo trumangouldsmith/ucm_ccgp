@@ -142,6 +142,15 @@ pytest
 - Average trading volume
 - Volume trend detection
 
+### Task 5: S3 Caching Layer (Complete)
+- S3-based caching with boto3
+- Cache key generation (MD5 hash of parameters)
+- TTL support (default 24 hours, configurable)
+- Automatic cache hit/miss detection
+- Cache expiration handling
+- Cache management endpoints (stats, clear)
+- Environment-based configuration
+
 ## Demo & Testing
 
 ### Run Yahoo Finance Demo
@@ -188,11 +197,43 @@ The response will include:
 - Moving averages (SMA 20, 50, 200)
 - Correlation matrix between stocks
 
+## Configuration
+
+Set environment variables to configure caching:
+
+```bash
+# Enable/disable caching
+export ENABLE_CACHE=true
+
+# S3 bucket for cache
+export CACHE_BUCKET_NAME=your-bucket-name
+
+# Cache TTL in hours
+export CACHE_TTL_HOURS=24
+
+# AWS region
+export AWS_REGION=us-east-1
+
+# For local dev without S3
+export USE_LOCAL_CACHE=false
+```
+
+## Cache Endpoints
+
+**Get cache stats:**
+```
+GET /api/cache/stats
+```
+
+**Clear all cache:**
+```
+DELETE /api/cache/clear
+```
+
 ## Next Steps
 
 Ready for:
 
-- **Task 5:** Add S3 caching layer
 - **Task 6:** Wrap for AWS Lambda deployment
 
 ## Development Notes
