@@ -120,18 +120,27 @@ pytest
 
 ## Features Implemented
 
-### Task 2: FastAPI Skeleton (Completed)
+### Task 2: FastAPI Skeleton (Complete)
 - FastAPI application with health endpoint
 - Pydantic models for request/response validation
 - Basic routing structure
 - Comprehensive test suite
 
-### Task 3: Yahoo Finance Data Fetcher (Completed)
+### Task 3: Yahoo Finance Data Fetcher (Complete)
 - Fetch historical OHLCV data for single or multiple tickers
 - Support for multiple intervals (1d, 1wk, 1mo)
 - Robust error handling for invalid tickers
 - Ticker validation and information retrieval
 - Comprehensive test coverage
+
+### Task 4: Analytics Calculations (Complete)
+- Daily returns calculation
+- Total return over period
+- Volatility (standard deviation of returns)
+- Correlation matrix (pairwise between stocks)
+- Moving averages (SMA 20/50/200)
+- Average trading volume
+- Volume trend detection
 
 ## Demo & Testing
 
@@ -165,18 +174,24 @@ Then visit http://localhost:8000/docs and try the `/api/analyze` endpoint with:
 {
   "tickers": ["AAPL", "GOOGL", "MSFT"],
   "date_range": {
-    "start_date": "2023-01-01",
-    "end_date": "2023-01-31"
+    "start_date": "2025-11-01",
+    "end_date": "2025-11-20"
   },
   "interval": "1d"
 }
 ```
 
+The response will include:
+- Total return percentage
+- Volatility (std dev of returns)
+- Average trading volume
+- Moving averages (SMA 20, 50, 200)
+- Correlation matrix between stocks
+
 ## Next Steps
 
 Ready for:
 
-- **Task 4:** Implement analytics calculations (returns, volatility, correlation, SMAs)
 - **Task 5:** Add S3 caching layer
 - **Task 6:** Wrap for AWS Lambda deployment
 

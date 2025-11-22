@@ -14,6 +14,7 @@ from app.services.yahoo_finance import (
     InvalidTickerError,
     DataFetchError
 )
+from app.services.analytics import AnalyticsService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -51,29 +52,33 @@ async def analyze_stocks(request: StockAnalysisRequest):
             interval=request.interval
         )
         
-        # Build metrics for each ticker (calculations will be added in Task 4)
+        # Calculate metrics for each ticker
         metrics = {}
         for ticker, df in stock_data.items():
-            # For now, just store basic info - Task 4 will add calculations
-            avg_volume = df['Volume'].mean() if 'Volume' in df.columns else None
+            calculated = AnalyticsService.calculate_all_metrics(ticker, df)
             
             metrics[ticker] = StockMetrics(
                 ticker=ticker,
-                total_return=None,      # Task 4: Calculate total return
-                volatility=None,         # Task 4: Calculate volatility
-                average_volume=float(avg_volume) if avg_volume else None,
-                sma_20=None,            # Task 4: Calculate SMA
-                sma_50=None,            # Task 4: Calculate SMA
-                sma_200=None            # Task 4: Calculate SMA
+                total_return=calculated['total_return'],
+                volatility=calculated['volatility'],
+                average_volume=calculated['average_volume'],
+                sma_20=calculated['sma_20'],
+                sma_50=calculated['sma_50'],
+                sma_200=calculated['sma_200']
             )
         
-        logger.info(f"Successfully fetched data for {len(metrics)} tickers")
+        # Calculate correlation matrix if multiple tickers
+        correlation_matrix = None
+        if len(stock_data) > 1:
+            correlation_matrix = AnalyticsService.calculate_correlation_matrix(stock_data)
+        
+        logger.info(f"Successfully analyzed {len(metrics)} tickers")
         
         return StockAnalysisResponse(
             request_id=request_id,
             tickers=list(stock_data.keys()),
             metrics=metrics,
-            correlation_matrix=None,  # Task 4: Calculate correlation matrix
+            correlation_matrix=correlation_matrix,
             cached=False,
             timestamp=datetime.utcnow()
         )
