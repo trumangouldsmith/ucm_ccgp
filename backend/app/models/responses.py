@@ -4,7 +4,8 @@ Response models for API endpoints.
 
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
+import math
 
 
 class HealthResponse(BaseModel):
@@ -34,9 +35,23 @@ class StockMetrics(BaseModel):
     total_return: Optional[float] = Field(None, description="Total return percentage")
     volatility: Optional[float] = Field(None, description="Volatility (standard deviation)")
     average_volume: Optional[float] = Field(None, description="Average trading volume")
-    sma_20: Optional[List[float]] = Field(None, description="20-day simple moving average")
-    sma_50: Optional[List[float]] = Field(None, description="50-day simple moving average")
-    sma_200: Optional[List[float]] = Field(None, description="200-day simple moving average")
+    sma_20: Optional[List[Optional[float]]] = Field(None, description="20-day simple moving average")
+    sma_50: Optional[List[Optional[float]]] = Field(None, description="50-day simple moving average")
+    sma_200: Optional[List[Optional[float]]] = Field(None, description="200-day simple moving average")
+    
+    @validator('sma_20', 'sma_50', 'sma_200', pre=True)
+    def convert_nan_to_none(cls, v):
+        """Convert NaN values to None for JSON serialization."""
+        if v is None:
+            return None
+        return [None if (isinstance(x, float) and math.isnan(x)) else x for x in v]
+    
+    @validator('total_return', 'volatility', 'average_volume', pre=True)
+    def convert_nan_float_to_none(cls, v):
+        """Convert NaN float values to None."""
+        if isinstance(v, float) and math.isnan(v):
+            return None
+        return v
 
 
 class StockAnalysisResponse(BaseModel):
