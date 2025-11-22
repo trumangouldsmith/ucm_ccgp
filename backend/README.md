@@ -118,12 +118,65 @@ Run tests with pytest:
 pytest
 ```
 
+## Features Implemented
+
+### Task 2: FastAPI Skeleton (Completed)
+- FastAPI application with health endpoint
+- Pydantic models for request/response validation
+- Basic routing structure
+- Comprehensive test suite
+
+### Task 3: Yahoo Finance Data Fetcher (Completed)
+- Fetch historical OHLCV data for single or multiple tickers
+- Support for multiple intervals (1d, 1wk, 1mo)
+- Robust error handling for invalid tickers
+- Ticker validation and information retrieval
+- Comprehensive test coverage
+
+## Demo & Testing
+
+### Run Yahoo Finance Demo
+
+To see the Yahoo Finance integration in action:
+
+```bash
+python demo_yahoo_finance.py
+```
+
+This will demonstrate:
+- Fetching single ticker data
+- Fetching multiple tickers
+- Ticker validation
+- Getting ticker information
+- Different time intervals
+- Error handling
+
+### Run API Demo
+
+Start the server and test the API:
+
+```bash
+python run_dev.py
+```
+
+Then visit http://localhost:8000/docs and try the `/api/analyze` endpoint with:
+
+```json
+{
+  "tickers": ["AAPL", "GOOGL", "MSFT"],
+  "date_range": {
+    "start_date": "2023-01-01",
+    "end_date": "2023-01-31"
+  },
+  "interval": "1d"
+}
+```
+
 ## Next Steps
 
-This skeleton is ready for:
+Ready for:
 
-- **Task 3:** Implement Yahoo Finance data fetcher
-- **Task 4:** Implement analytics calculations
+- **Task 4:** Implement analytics calculations (returns, volatility, correlation, SMAs)
 - **Task 5:** Add S3 caching layer
 - **Task 6:** Wrap for AWS Lambda deployment
 
