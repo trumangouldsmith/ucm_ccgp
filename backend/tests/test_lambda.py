@@ -72,7 +72,8 @@ class TestLambdaHandler:
                 "http": {
                     "method": "GET",
                     "path": "/",
-                    "protocol": "HTTP/1.1"
+                    "protocol": "HTTP/1.1",
+                    "sourceIp": "127.0.0.1"
                 },
                 "requestId": "test-request-id"
             },
@@ -98,7 +99,8 @@ class TestLambdaHandler:
                 "http": {
                     "method": "GET",
                     "path": "/nonexistent",
-                    "protocol": "HTTP/1.1"
+                    "protocol": "HTTP/1.1",
+                    "sourceIp": "127.0.0.1"
                 },
                 "requestId": "test-request-id"
             },
