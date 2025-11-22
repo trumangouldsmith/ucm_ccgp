@@ -37,6 +37,31 @@ Output in `dist/` folder, ready for S3 deployment.
   - Metrics table (returns, volatility, volume)
   - Correlation matrix with color coding
 
-## Pending
+- Task 10: Backend API integration
+  - Axios service with error handling
+  - Environment-based configuration
+  - API health check indicator
+  - Cache status display
 
-- Task 10: Connect to backend API (currently using mock data)
+## Configuration
+
+Create `.env` file (copy from `.env.example`):
+
+```bash
+VITE_API_URL=http://localhost:8000
+```
+
+## Running Full Stack
+
+**Terminal 1 - Backend:**
+```bash
+cd backend
+venv\Scripts\activate
+ENABLE_CACHE=false python run_dev.py
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
+npm run dev
+```
