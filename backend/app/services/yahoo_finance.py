@@ -69,7 +69,7 @@ class YahooFinanceService:
         if start_date >= end_date:
             raise ValueError("start_date must be before end_date")
         
-        valid_intervals = ["1d", "1wk", "1mo"]
+        valid_intervals = ["5m", "15m", "30m", "1h", "1d", "1wk", "1mo"]
         if interval not in valid_intervals:
             raise ValueError(f"interval must be one of {valid_intervals}")
         

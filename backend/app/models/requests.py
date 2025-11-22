@@ -62,7 +62,7 @@ class StockAnalysisRequest(BaseModel):
     )
     interval: Optional[str] = Field(
         default="1d",
-        description="Data interval (1d, 1wk, 1mo)",
+        description="Data interval (5m, 15m, 30m, 1h, 1d, 1wk, 1mo)",
         example="1d"
     )
     
@@ -77,7 +77,7 @@ class StockAnalysisRequest(BaseModel):
     @validator("interval")
     def interval_must_be_valid(cls, v):
         """Validate interval is one of the accepted values."""
-        valid_intervals = ["1d", "1wk", "1mo"]
+        valid_intervals = ["5m", "15m", "30m", "1h", "1d", "1wk", "1mo"]
         if v not in valid_intervals:
             raise ValueError(f"interval must be one of {valid_intervals}")
         return v

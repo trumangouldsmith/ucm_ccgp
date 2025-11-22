@@ -17,7 +17,7 @@ function PriceChart({ data, tickers }) {
           {tickers.map((ticker, index) => (
             <Line
               key={ticker}
-              type="monotone"
+              type="linear"
               dataKey={ticker}
               stroke={colors[index % colors.length]}
               strokeWidth={2}

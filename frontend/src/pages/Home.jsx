@@ -91,9 +91,13 @@ function Home() {
               onChange={(e) => setInterval(e.target.value)}
               className="form-input"
             >
-              <option value="1d">Daily (1d)</option>
-              <option value="1wk">Weekly (1wk)</option>
-              <option value="1mo">Monthly (1mo)</option>
+              <option value="5m">5 Minutes</option>
+              <option value="15m">15 Minutes</option>
+              <option value="30m">30 Minutes</option>
+              <option value="1h">1 Hour</option>
+              <option value="1d">Daily</option>
+              <option value="1wk">Weekly</option>
+              <option value="1mo">Monthly</option>
             </select>
           </div>
           
