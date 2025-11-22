@@ -1,0 +1,23 @@
+{
+  "FunctionName": "stock-performance-analyzer",
+  "Runtime": "python3.11",
+  "Role": "arn:aws:iam::YOUR_ACCOUNT_ID:role/lambda-execution-role",
+  "Handler": "lambda_handler.handler",
+  "Description": "Stock Performance Comparison API",
+  "Timeout": 30,
+  "MemorySize": 512,
+  "Environment": {
+    "Variables": {
+      "CACHE_BUCKET_NAME": "stock-analytics-cache",
+      "CACHE_TTL_HOURS": "24",
+      "AWS_REGION": "us-east-1",
+      "ENABLE_CACHE": "true",
+      "USE_LOCAL_CACHE": "false"
+    }
+  },
+  "Tags": {
+    "Project": "StockPerformanceComparison",
+    "Environment": "production"
+  }
+}
+
