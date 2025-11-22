@@ -115,7 +115,8 @@ Analyzes stock performance for multiple tickers.
 Run tests with pytest:
 
 ```bash
-pytest
+pytest -v --tb=no          # All tests
+pytest tests/test_lambda.py -v --tb=no  # Lambda tests only
 ```
 
 ## Features Implemented
@@ -230,11 +231,66 @@ GET /api/cache/stats
 DELETE /api/cache/clear
 ```
 
-## Next Steps
+### Task 6: Lambda Deployment (Complete)
+- Mangum wrapper for Lambda
+- Lambda handler implementation
+- Deployment package creation script
+- Lambda configuration (timeout, memory, env vars)
+- IAM policy for S3 access
+- Deployment script
 
-Ready for:
+## Lambda Deployment
 
-- **Task 6:** Wrap for AWS Lambda deployment
+### Create Deployment Package
+
+```bash
+python deploy_lambda.py
+```
+
+This creates `dist/lambda_deployment.zip` with all dependencies.
+
+### Deploy to AWS
+
+**Option 1: Using AWS CLI**
+
+```bash
+# Update existing function
+aws lambda update-function-code \
+  --function-name stock-performance-analyzer \
+  --zip-file fileb://dist/lambda_deployment.zip
+```
+
+**Option 2: Using deployment script**
+
+```bash
+cd ../infra
+./deploy.sh
+```
+
+### Lambda Configuration
+
+- **Runtime:** Python 3.11
+- **Handler:** `lambda_handler.handler`
+- **Timeout:** 30 seconds (recommended)
+- **Memory:** 512 MB (adjust based on usage)
+- **Environment Variables:** See `.env.example`
+
+### IAM Permissions
+
+Lambda needs:
+- CloudWatch Logs (write)
+- S3 (read/write for cache bucket)
+
+See `infra/iam_policy.json` for complete policy.
+
+## All Tasks Complete
+
+Backend implementation finished:
+- Task 2: FastAPI Skeleton
+- Task 3: Yahoo Finance Data Fetcher
+- Task 4: Analytics Calculations
+- Task 5: S3 Caching Layer
+- Task 6: Lambda Deployment
 
 ## Development Notes
 

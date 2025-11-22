@@ -47,6 +47,9 @@ htmlcov/
 
 # AWS
 .aws-sam/
+lambda_package/
+dist/
+*.zip
 
 # OS
 .DS_Store
