@@ -1,22 +1,22 @@
 # FastAPI and ASGI server
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
+fastapi
+uvicorn
 
 # Pydantic for data validation
-pydantic==2.5.0
+pydantic
 
 # Data processing (Task 3-4)
-pandas==2.1.3
-numpy==1.26.2
-yfinance==0.2.32
+pandas
+numpy
+yfinance
 
 # AWS SDK for S3 caching (Task 5)
-# boto3==1.29.7
+# boto3
 
 # Lambda deployment (Task 6)
-# mangum==0.17.0
+# mangum
 
 # Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-httpx==0.25.1
+pytest
+pytest-asyncio
+httpx
