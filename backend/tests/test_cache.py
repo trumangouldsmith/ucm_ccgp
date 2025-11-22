@@ -236,9 +236,9 @@ class TestCacheService:
         # Mock list_objects response
         mock_s3.list_objects_v2.return_value = {
             'Contents': [
-                {'Key': 'cache/test1.json', 'Size': 1024},
-                {'Key': 'cache/test2.json', 'Size': 2048},
-                {'Key': 'cache/test3.json', 'Size': 1024}
+                {'Key': 'cache/test1.json', 'Size': 2097152},
+                {'Key': 'cache/test2.json', 'Size': 2097152},
+                {'Key': 'cache/test3.json', 'Size': 2097152}
             ]
         }
         
@@ -247,7 +247,7 @@ class TestCacheService:
         stats = cache_service.get_cache_stats()
         
         assert stats['count'] == 3
-        assert stats['total_size_bytes'] == 4096
+        assert stats['total_size_bytes'] == 6291456
         assert stats['total_size_mb'] > 0
     
     @patch('boto3.client')
