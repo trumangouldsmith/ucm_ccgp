@@ -43,6 +43,14 @@
   margin-bottom: 0;
 }
 
+.mock-notice {
+  color: #ea580c;
+  font-style: italic;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
 .loading {
   text-align: center;
   padding: 4rem 2rem;

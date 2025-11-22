@@ -30,9 +30,13 @@ Output in `dist/` folder, ready for S3 deployment.
 ## Tasks Complete
 
 - Task 7: React app setup with routing and layout
+- Task 8: Input interface (complete with validation)
+- Task 9: Display metrics & charts
+  - Price performance line chart
+  - Trading volume bar chart
+  - Metrics table (returns, volatility, volume)
+  - Correlation matrix with color coding
 
 ## Pending
 
-- Task 8: Build input interface enhancements
-- Task 9: Display metrics & charts
-- Task 10: Connect to backend API
+- Task 10: Connect to backend API (currently using mock data)
