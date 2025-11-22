@@ -124,11 +124,14 @@ async def analyze_stocks(request: StockAnalysisRequest):
             correlation_matrix = AnalyticsService.calculate_correlation_matrix(stock_data)
         
         # Prepare historical data for charts
+        # Include time for intraday intervals
+        is_intraday = request.interval in ['5m', '15m', '30m', '1h']
+        
         historical_data = {}
         for ticker, df in stock_data.items():
             historical_data[ticker] = [
                 {
-                    'date': idx.strftime('%Y-%m-%d'),
+                    'date': idx.strftime('%Y-%m-%d %H:%M:%S') if is_intraday else idx.strftime('%Y-%m-%d'),
                     'close': float(row['Close']) if 'Close' in row and not pd.isna(row['Close']) else None,
                     'volume': int(row['Volume']) if 'Volume' in row and not pd.isna(row['Volume']) else None,
                     'open': float(row['Open']) if 'Open' in row and not pd.isna(row['Open']) else None,
