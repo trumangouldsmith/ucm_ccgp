@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, status
 import logging
+import pandas as pd
 
 from app.models.requests import StockAnalysisRequest
 from app.models.responses import StockAnalysisResponse, StockMetrics
@@ -88,6 +89,7 @@ async def analyze_stocks(request: StockAnalysisRequest):
                 tickers=cached_data['tickers'],
                 metrics=metrics,
                 correlation_matrix=cached_data.get('correlation_matrix'),
+                historical_data=cached_data.get('historical_data'),
                 cached=True,
                 timestamp=datetime.utcnow()
             )
@@ -121,6 +123,21 @@ async def analyze_stocks(request: StockAnalysisRequest):
         if len(stock_data) > 1:
             correlation_matrix = AnalyticsService.calculate_correlation_matrix(stock_data)
         
+        # Prepare historical data for charts
+        historical_data = {}
+        for ticker, df in stock_data.items():
+            historical_data[ticker] = [
+                {
+                    'date': idx.strftime('%Y-%m-%d'),
+                    'close': float(row['Close']) if 'Close' in row and not pd.isna(row['Close']) else None,
+                    'volume': int(row['Volume']) if 'Volume' in row and not pd.isna(row['Volume']) else None,
+                    'open': float(row['Open']) if 'Open' in row and not pd.isna(row['Open']) else None,
+                    'high': float(row['High']) if 'High' in row and not pd.isna(row['High']) else None,
+                    'low': float(row['Low']) if 'Low' in row and not pd.isna(row['Low']) else None,
+                }
+                for idx, row in df.iterrows()
+            ]
+        
         logger.info(f"Successfully analyzed {len(metrics)} tickers")
         
         # Cache the results
@@ -131,7 +148,8 @@ async def analyze_stocks(request: StockAnalysisRequest):
                     ticker: metric.dict()
                     for ticker, metric in metrics.items()
                 },
-                'correlation_matrix': correlation_matrix
+                'correlation_matrix': correlation_matrix,
+                'historical_data': historical_data
             }
             cache_service.set(cache_key, cache_data)
         
@@ -140,6 +158,7 @@ async def analyze_stocks(request: StockAnalysisRequest):
             tickers=list(stock_data.keys()),
             metrics=metrics,
             correlation_matrix=correlation_matrix,
+            historical_data=historical_data,
             cached=False,
             timestamp=datetime.utcnow()
         )

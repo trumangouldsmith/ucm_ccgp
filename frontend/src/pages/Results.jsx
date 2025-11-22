@@ -9,13 +9,39 @@ import './Results.css';
 
 // Transform backend data to chart format
 const transformDataForCharts = (backendData) => {
-  // For now, return placeholder since we need historical price data from backend
-  // This will be updated when backend returns time series data
-  const { metrics, correlation_matrix, tickers } = backendData;
+  const { metrics, correlation_matrix, tickers, historical_data } = backendData;
   
-  // Placeholder chart data - in production, backend should return historical prices
-  const priceData = [];
-  const volumeData = [];
+  if (!historical_data) {
+    return {
+      priceData: [],
+      volumeData: [],
+      metrics,
+      correlationMatrix: correlation_matrix,
+      tickers,
+      cached: backendData.cached
+    };
+  }
+  
+  // Combine all tickers' data by date
+  const dateMap = new Map();
+  
+  tickers.forEach(ticker => {
+    const tickerData = historical_data[ticker] || [];
+    tickerData.forEach(point => {
+      if (!dateMap.has(point.date)) {
+        dateMap.set(point.date, { date: point.date });
+      }
+      const datePoint = dateMap.get(point.date);
+      datePoint[ticker] = point.close;
+      datePoint[`${ticker}_volume`] = point.volume;
+    });
+  });
+  
+  // Convert to sorted arrays
+  const priceData = Array.from(dateMap.values()).sort((a, b) => 
+    a.date.localeCompare(b.date)
+  );
+  const volumeData = priceData; // Same data, different fields used
   
   return {
     priceData,
@@ -114,12 +140,20 @@ function Results() {
         )}
       </div>
       
+      {data.priceData && data.priceData.length > 0 && (
+        <PriceChart data={data.priceData} tickers={data.tickers} />
+      )}
+      
       <MetricsTable metrics={data.metrics} />
       
       <CorrelationMatrix 
         correlationMatrix={data.correlationMatrix} 
         tickers={data.tickers} 
       />
+      
+      {data.volumeData && data.volumeData.length > 0 && (
+        <VolumeChart data={data.volumeData} tickers={data.tickers} />
+      )}
     </div>
   );
 }

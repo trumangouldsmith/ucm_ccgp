@@ -73,6 +73,10 @@ class StockAnalysisResponse(BaseModel):
         None,
         description="Correlation matrix between tickers"
     )
+    historical_data: Optional[Dict[str, List[Dict[str, Any]]]] = Field(
+        None,
+        description="Historical price and volume data for charts"
+    )
     cached: bool = Field(
         ...,
         description="Whether results were retrieved from cache"
