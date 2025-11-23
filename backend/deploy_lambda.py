@@ -36,20 +36,20 @@ def create_deployment_package():
     
     if venv_site_packages.exists():
         for item in venv_site_packages.iterdir():
-            # Skip dev packages and certain files
+            # Skip dev packages
             skip = False
             for skip_pkg in skip_packages:
                 if item.name.lower().startswith(skip_pkg.lower()):
                     skip = True
                     break
             
-            if skip or item.name.startswith('~'):
+            if skip or item.name.startswith('~') or item.name.endswith('.dist-info'):
                 continue
                 
-            if item.is_dir() and not item.name.startswith('_'):
+            if item.is_dir():
                 print(f"  Copying {item.name}...")
-                shutil.copytree(item, package_dir / item.name, ignore=shutil.ignore_patterns('*.pyc', '__pycache__', '*.dist-info'))
-            elif item.suffix == '.py':
+                shutil.copytree(item, package_dir / item.name, ignore=shutil.ignore_patterns('*.pyc', '__pycache__'))
+            elif item.suffix in ['.py', '.pyd', '.so']:
                 shutil.copy2(item, package_dir / item.name)
     else:
         print("ERROR: Virtual environment not found. Make sure venv is activated.")
