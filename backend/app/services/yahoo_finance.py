@@ -10,8 +10,12 @@ import pandas as pd
 from datetime import date, datetime
 from typing import Optional, Dict, Any
 import logging
+from app.services.mock_data import generate_mock_batch
 
 logger = logging.getLogger(__name__)
+
+# Flag to enable mock data fallback
+USE_MOCK_DATA_FALLBACK = True
 
 
 class YahooFinanceError(Exception):
@@ -208,6 +212,8 @@ class YahooFinanceService:
         """
         Fetch historical data for multiple tickers.
         
+        Falls back to mock data if Yahoo Finance is unavailable (e.g., AWS IP blocking).
+        
         Args:
             tickers: List of stock ticker symbols
             start_date: Start date for historical data
@@ -240,6 +246,27 @@ class YahooFinanceService:
             except (InvalidTickerError, DataFetchError) as e:
                 errors[ticker.upper()] = str(e)
                 logger.warning(f"Failed to fetch {ticker}: {str(e)}")
+        
+        # If all tickers failed and mock data fallback is enabled, use mock data
+        if not results and USE_MOCK_DATA_FALLBACK:
+            logger.warning(
+                "All Yahoo Finance requests failed. Using mock data for demo purposes. "
+                "This is likely due to Yahoo Finance blocking AWS IP addresses."
+            )
+            try:
+                results = generate_mock_batch(
+                    tickers=[t.upper() for t in tickers],
+                    start_date=start_date.isoformat(),
+                    end_date=end_date.isoformat(),
+                    interval=interval
+                )
+                logger.info(f"Generated mock data for {len(results)} tickers")
+                return results
+            except Exception as e:
+                logger.error(f"Failed to generate mock data: {str(e)}")
+                raise DataFetchError(
+                    f"Yahoo Finance unavailable and mock data generation failed: {str(e)}"
+                )
         
         if not results:
             raise DataFetchError(

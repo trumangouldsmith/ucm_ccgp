@@ -20,14 +20,14 @@ def build():
     dist_dir.mkdir(exist_ok=True)
     package_dir.mkdir()
     
-    # Install pure-Python dependencies
+    # Install pure-Python dependencies (pydantic v1 compatible)
     print("Installing dependencies...")
     subprocess.run([
         "pip", "install",
-        "fastapi==0.95.0",
+        "fastapi==0.88.0",
         "mangum==0.17.0",
-        "pydantic==1.10.12",
-        "starlette==0.26.1",
+        "pydantic==1.10.7",
+        "starlette==0.22.0",
         "-t", str(package_dir),
         "--no-deps",
         "--no-cache-dir"
