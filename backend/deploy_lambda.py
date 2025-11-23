@@ -28,36 +28,63 @@ def create_deployment_package():
     
     package_dir.mkdir()
     
-    # Copy all packages from venv
-    print("\nCopying packages from virtual environment...")
-    print("WARNING: Windows binaries (.pyd) won't work on Lambda")
-    print("This package may fail on Lambda. Consider using Docker or Lambda Layers.\n")
+    # Download Linux wheels for binary packages
+    print("\nDownloading Linux-compatible wheels for binary packages...")
+    binary_packages = [
+        "pydantic-core==2.14.1",
+        "pandas==2.1.3", 
+        "numpy==1.26.2",
+    ]
     
-    if not venv_site_packages.exists():
-        print("ERROR: Virtual environment not found at", venv_site_packages)
-        return None
+    temp_download = Path("temp_linux_wheels")
+    temp_download.mkdir(exist_ok=True)
     
-    copied_count = 0
-    for item in venv_site_packages.iterdir():
-        # Skip unnecessary items
-        if item.name in ['pip', 'setuptools', 'wheel', 'pytest', 'httpx', '_distutils_hack', 'pkg_resources']:
-            continue
-        if item.name.startswith('~') or item.name == '__pycache__':
-            continue
-            
+    for pkg in binary_packages:
+        print(f"  Downloading {pkg}...")
         try:
-            if item.is_dir():
-                print(f"  {item.name}")
-                shutil.copytree(item, package_dir / item.name, 
-                              ignore=shutil.ignore_patterns('*.pyc', '__pycache__'))
-                copied_count += 1
-            elif item.suffix == '.py':
-                shutil.copy2(item, package_dir / item.name)
-                copied_count += 1
-        except Exception as e:
-            pass  # Silently skip errors
+            subprocess.run([
+                "pip", "download", pkg,
+                "--platform", "manylinux2014_x86_64",
+                "--only-binary=:all:",
+                "--python-version", "3.11",
+                "--dest", str(temp_download),
+                "--no-deps"
+            ], check=True, capture_output=True)
+        except:
+            print(f"    Warning: Could not download {pkg}, will try from venv")
     
-    print(f"\nCopied {copied_count} packages")
+    # Extract downloaded wheels
+    print("\nExtracting Linux wheels...")
+    for whl_file in temp_download.glob("*.whl"):
+        print(f"  Extracting {whl_file.name}...")
+        import zipfile
+        with zipfile.ZipFile(whl_file, 'r') as zip_ref:
+            zip_ref.extractall(package_dir)
+    
+    # Copy pure-Python packages from venv
+    print("\nCopying pure-Python packages from venv...")
+    skip_packages = {'pip', 'setuptools', 'wheel', 'pytest', 'httpx', '_distutils_hack', 
+                    'pkg_resources', 'pandas', 'numpy', 'pydantic_core', 'pydantic-core'}
+    
+    if venv_site_packages.exists():
+        for item in venv_site_packages.iterdir():
+            if item.name in skip_packages or item.name.startswith('~'):
+                continue
+            if item.name.startswith('pandas') or item.name.startswith('numpy') or 'pydantic_core' in item.name:
+                continue
+                
+            try:
+                if item.is_dir() and not item.name.endswith('.dist-info'):
+                    print(f"  {item.name}")
+                    shutil.copytree(item, package_dir / item.name, 
+                                  ignore=shutil.ignore_patterns('*.pyc', '__pycache__'))
+                elif item.suffix == '.py':
+                    shutil.copy2(item, package_dir / item.name)
+            except:
+                pass
+    
+    # Cleanup
+    shutil.rmtree(temp_download, ignore_errors=True)
     
     # Copy application code
     print("\nCopying application code...")
