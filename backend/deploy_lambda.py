@@ -28,32 +28,27 @@ def create_deployment_package():
     
     package_dir.mkdir()
     
-    # Copy dependencies from venv
-    print("\nCopying dependencies from virtual environment...")
-    
-    # Skip these packages (dev/test only)
-    skip_packages = ['pip', 'setuptools', 'wheel', 'pytest', 'httpx', 'virtualenv']
-    
-    if venv_site_packages.exists():
-        for item in venv_site_packages.iterdir():
-            # Skip dev packages
-            skip = False
-            for skip_pkg in skip_packages:
-                if item.name.lower().startswith(skip_pkg.lower()):
-                    skip = True
-                    break
-            
-            if skip or item.name.startswith('~') or item.name.endswith('.dist-info'):
-                continue
-                
-            if item.is_dir():
-                print(f"  Copying {item.name}...")
-                shutil.copytree(item, package_dir / item.name, ignore=shutil.ignore_patterns('*.pyc', '__pycache__'))
-            elif item.suffix in ['.py', '.pyd', '.so']:
-                shutil.copy2(item, package_dir / item.name)
-    else:
-        print("ERROR: Virtual environment not found. Make sure venv is activated.")
-        return None
+    # Install dependencies for Linux (Lambda runtime)
+    print("\nInstalling dependencies for Lambda (Linux)...")
+    try:
+        subprocess.run([
+            "pip", "install",
+            "-r", "requirements-lambda.txt",
+            "-t", str(package_dir),
+            "--platform", "manylinux2014_x86_64",
+            "--implementation", "cp",
+            "--python-version", "3.11",
+            "--only-binary=:all:",
+            "--upgrade"
+        ], check=True)
+    except subprocess.CalledProcessError:
+        print("\nFailed to install Linux binaries. Trying without platform restrictions...")
+        subprocess.run([
+            "pip", "install",
+            "-r", "requirements-lambda.txt",
+            "-t", str(package_dir),
+            "--upgrade"
+        ], check=True)
     
     # Copy application code
     print("\nCopying application code...")
