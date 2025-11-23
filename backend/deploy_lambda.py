@@ -38,7 +38,8 @@ def create_deployment_package():
         'anyio', 'certifi', 'idna', 'sniffio', 'urllib3', 'jmespath',
         'requests', 'charset_normalizer', 'python_dateutil', 'pytz',
         'tzdata', 'six', 'multitasking', 'lxml', 'appdirs', 'frozendict',
-        'peewee', 'html5lib', 'beautifulsoup4', 'annotated_types'
+        'peewee', 'html5lib', 'beautifulsoup4', 'annotated_types',
+        'typing_extensions', 'soupsieve', 'webencodings'
     ]
     
     if venv_site_packages.exists():
