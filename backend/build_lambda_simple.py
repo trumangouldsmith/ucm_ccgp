@@ -29,7 +29,8 @@ def build():
         "pydantic==1.10.12",
         "starlette==0.26.1",
         "-t", str(package_dir),
-        "--no-deps"
+        "--no-deps",
+        "--no-cache-dir"
     ], check=True)
     
     # Install yfinance with its dependencies
@@ -46,7 +47,8 @@ def build():
         "html5lib",
         "beautifulsoup4",
         "-t", str(package_dir),
-        "--no-deps"
+        "--no-deps",
+        "--no-cache-dir"
     ], check=True)
     
     # Copy additional needed packages
@@ -59,7 +61,7 @@ def build():
     
     for pkg in extras:
         try:
-            subprocess.run(["pip", "install", pkg, "-t", str(package_dir), "--no-deps"], 
+            subprocess.run(["pip", "install", pkg, "-t", str(package_dir), "--no-deps", "--no-cache-dir"], 
                          check=True, capture_output=True)
         except:
             pass
@@ -73,11 +75,13 @@ def build():
     print("\nCreating ZIP file...")
     zip_path = dist_dir / "lambda_deployment.zip"
     
+    import os
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in package_dir.rglob('*'):
-            if root.is_file():
-                arcname = root.relative_to(package_dir)
-                zipf.write(root, arcname)
+        for root, dirs, files in os.walk(package_dir):
+            for file in files:
+                file_path = Path(root) / file
+                arcname = file_path.relative_to(package_dir)
+                zipf.write(file_path, arcname)
     
     # Cleanup
     shutil.rmtree(package_dir)
