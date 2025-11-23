@@ -31,30 +31,26 @@ def create_deployment_package():
     # Copy dependencies from venv
     print("\nCopying dependencies from virtual environment...")
     
-    # List of packages to include (from requirements-lambda.txt)
-    packages = [
-        'fastapi', 'mangum', 'pydantic', 'pydantic_core', 'pandas', 
-        'numpy', 'yfinance', 'boto3', 'botocore', 'starlette',
-        'anyio', 'certifi', 'idna', 'sniffio', 'urllib3', 'jmespath',
-        'requests', 'charset_normalizer', 'python_dateutil', 'pytz',
-        'tzdata', 'six', 'multitasking', 'lxml', 'appdirs', 'frozendict',
-        'peewee', 'html5lib', 'beautifulsoup4', 'annotated_types',
-        'typing_extensions', 'soupsieve', 'webencodings'
-    ]
+    # Skip these packages (dev/test only)
+    skip_packages = ['pip', 'setuptools', 'wheel', 'pytest', 'httpx', 'virtualenv']
     
     if venv_site_packages.exists():
         for item in venv_site_packages.iterdir():
-            # Copy if it's a package we need or its dist-info
-            item_lower = item.name.lower().replace('_', '-')
-            for pkg in packages:
-                pkg_lower = pkg.lower().replace('_', '-')
-                if item_lower.startswith(pkg_lower):
-                    if item.is_dir():
-                        print(f"  Copying {item.name}...")
-                        shutil.copytree(item, package_dir / item.name, ignore=shutil.ignore_patterns('*.pyc', '__pycache__'))
-                    else:
-                        shutil.copy2(item, package_dir / item.name)
+            # Skip dev packages and certain files
+            skip = False
+            for skip_pkg in skip_packages:
+                if item.name.lower().startswith(skip_pkg.lower()):
+                    skip = True
                     break
+            
+            if skip or item.name.startswith('~'):
+                continue
+                
+            if item.is_dir() and not item.name.startswith('_'):
+                print(f"  Copying {item.name}...")
+                shutil.copytree(item, package_dir / item.name, ignore=shutil.ignore_patterns('*.pyc', '__pycache__', '*.dist-info'))
+            elif item.suffix == '.py':
+                shutil.copy2(item, package_dir / item.name)
     else:
         print("ERROR: Virtual environment not found. Make sure venv is activated.")
         return None
