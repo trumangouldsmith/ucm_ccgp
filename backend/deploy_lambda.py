@@ -28,27 +28,36 @@ def create_deployment_package():
     
     package_dir.mkdir()
     
-    # Install dependencies for Linux (Lambda runtime)
-    print("\nInstalling dependencies for Lambda (Linux)...")
-    try:
-        subprocess.run([
-            "pip", "install",
-            "-r", "requirements-lambda.txt",
-            "-t", str(package_dir),
-            "--platform", "manylinux2014_x86_64",
-            "--implementation", "cp",
-            "--python-version", "3.11",
-            "--only-binary=:all:",
-            "--upgrade"
-        ], check=True)
-    except subprocess.CalledProcessError:
-        print("\nFailed to install Linux binaries. Trying without platform restrictions...")
-        subprocess.run([
-            "pip", "install",
-            "-r", "requirements-lambda.txt",
-            "-t", str(package_dir),
-            "--upgrade"
-        ], check=True)
+    # Copy all packages from venv
+    print("\nCopying packages from virtual environment...")
+    print("WARNING: Windows binaries (.pyd) won't work on Lambda")
+    print("This package may fail on Lambda. Consider using Docker or Lambda Layers.\n")
+    
+    if not venv_site_packages.exists():
+        print("ERROR: Virtual environment not found at", venv_site_packages)
+        return None
+    
+    copied_count = 0
+    for item in venv_site_packages.iterdir():
+        # Skip unnecessary items
+        if item.name in ['pip', 'setuptools', 'wheel', 'pytest', 'httpx', '_distutils_hack', 'pkg_resources']:
+            continue
+        if item.name.startswith('~') or item.name == '__pycache__':
+            continue
+            
+        try:
+            if item.is_dir():
+                print(f"  {item.name}")
+                shutil.copytree(item, package_dir / item.name, 
+                              ignore=shutil.ignore_patterns('*.pyc', '__pycache__'))
+                copied_count += 1
+            elif item.suffix == '.py':
+                shutil.copy2(item, package_dir / item.name)
+                copied_count += 1
+        except Exception as e:
+            pass  # Silently skip errors
+    
+    print(f"\nCopied {copied_count} packages")
     
     # Copy application code
     print("\nCopying application code...")
