@@ -28,63 +28,15 @@ def create_deployment_package():
     
     package_dir.mkdir()
     
-    # Download Linux wheels for binary packages
-    print("\nDownloading Linux-compatible wheels for binary packages...")
-    binary_packages = [
-        "pydantic-core==2.14.1",
-        "pandas==2.1.3", 
-        "numpy==1.26.2",
-    ]
+    # Install dependencies
+    print("\nInstalling dependencies...")
+    print("NOTE: pandas/numpy/boto3 will be provided by AWS Lambda Layer\n")
     
-    temp_download = Path("temp_linux_wheels")
-    temp_download.mkdir(exist_ok=True)
-    
-    for pkg in binary_packages:
-        print(f"  Downloading {pkg}...")
-        try:
-            subprocess.run([
-                "pip", "download", pkg,
-                "--platform", "manylinux2014_x86_64",
-                "--only-binary=:all:",
-                "--python-version", "3.11",
-                "--dest", str(temp_download),
-                "--no-deps"
-            ], check=True, capture_output=True)
-        except:
-            print(f"    Warning: Could not download {pkg}, will try from venv")
-    
-    # Extract downloaded wheels
-    print("\nExtracting Linux wheels...")
-    for whl_file in temp_download.glob("*.whl"):
-        print(f"  Extracting {whl_file.name}...")
-        import zipfile
-        with zipfile.ZipFile(whl_file, 'r') as zip_ref:
-            zip_ref.extractall(package_dir)
-    
-    # Copy pure-Python packages from venv
-    print("\nCopying pure-Python packages from venv...")
-    skip_packages = {'pip', 'setuptools', 'wheel', 'pytest', 'httpx', '_distutils_hack', 
-                    'pkg_resources', 'pandas', 'numpy', 'pydantic_core', 'pydantic-core'}
-    
-    if venv_site_packages.exists():
-        for item in venv_site_packages.iterdir():
-            if item.name in skip_packages or item.name.startswith('~'):
-                continue
-            if item.name.startswith('pandas') or item.name.startswith('numpy') or 'pydantic_core' in item.name:
-                continue
-                
-            try:
-                if item.is_dir() and not item.name.endswith('.dist-info'):
-                    print(f"  {item.name}")
-                    shutil.copytree(item, package_dir / item.name, 
-                                  ignore=shutil.ignore_patterns('*.pyc', '__pycache__'))
-                elif item.suffix == '.py':
-                    shutil.copy2(item, package_dir / item.name)
-            except:
-                pass
-    
-    # Cleanup
-    shutil.rmtree(temp_download, ignore_errors=True)
+    subprocess.run([
+        "pip", "install",
+        "-r", "requirements-lambda.txt",
+        "-t", str(package_dir)
+    ], check=True)
     
     # Copy application code
     print("\nCopying application code...")
