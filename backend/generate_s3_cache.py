@@ -5,6 +5,7 @@ Creates realistic mock stock data with analytics for demo purposes.
 
 import json
 import hashlib
+import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
 from app.services.mock_data import generate_mock_batch
@@ -66,8 +67,6 @@ def generate_sample_cache_files():
         },
     ]
     
-    analytics_service = AnalyticsService()
-    
     for i, query in enumerate(queries, 1):
         print(f"[{i}/{len(queries)}] Generating: {query['description']}")
         print(f"  Tickers: {', '.join(query['tickers'])}")
@@ -80,15 +79,49 @@ def generate_sample_cache_files():
             interval=query['interval']
         )
         
-        # Calculate analytics
+        # Calculate analytics (same as router logic)
         try:
-            analytics_result = analytics_service.calculate_analytics(stock_data)
+            # Calculate metrics for each ticker
+            metrics = {}
+            for ticker, df in stock_data.items():
+                calculated = AnalyticsService.calculate_all_metrics(ticker, df)
+                
+                metrics[ticker] = {
+                    'ticker': ticker,
+                    'total_return': calculated['total_return'],
+                    'volatility': calculated['volatility'],
+                    'average_volume': calculated['average_volume'],
+                    'sma_20': calculated['sma_20'],
+                    'sma_50': calculated['sma_50'],
+                    'sma_200': calculated['sma_200']
+                }
+            
+            # Calculate correlation matrix if multiple tickers
+            correlation_matrix = None
+            if len(stock_data) > 1:
+                correlation_matrix = AnalyticsService.calculate_correlation_matrix(stock_data)
+            
+            # Prepare historical data
+            historical_data = {}
+            for ticker, df in stock_data.items():
+                historical_data[ticker] = [
+                    {
+                        'date': idx.strftime('%Y-%m-%d'),
+                        'close': float(row['Close']) if not pd.isna(row['Close']) else None,
+                        'volume': int(row['Volume']) if not pd.isna(row['Volume']) else None,
+                        'open': float(row['Open']) if not pd.isna(row['Open']) else None,
+                        'high': float(row['High']) if not pd.isna(row['High']) else None,
+                        'low': float(row['Low']) if not pd.isna(row['Low']) else None,
+                    }
+                    for idx, row in df.iterrows()
+                ]
             
             # Format response data
             response_data = {
-                "metrics": analytics_result["metrics"],
-                "correlation_matrix": analytics_result["correlation_matrix"],
-                "historical_data": analytics_result["historical_data"]
+                "tickers": list(stock_data.keys()),
+                "metrics": metrics,
+                "correlation_matrix": correlation_matrix,
+                "historical_data": historical_data
             }
             
             # Wrap in cache format
