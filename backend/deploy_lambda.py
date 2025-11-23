@@ -32,10 +32,7 @@ def create_deployment_package():
     subprocess.run([
         "pip", "install",
         "-r", "requirements-lambda.txt",
-        "-t", str(package_dir),
-        "--platform", "manylinux2014_x86_64",
-        "--only-binary=:all:",
-        "--python-version", "3.11"
+        "-t", str(package_dir)
     ], check=True)
     
     # Copy application code
