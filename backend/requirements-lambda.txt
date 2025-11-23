@@ -1,9 +1,9 @@
 # Lambda deployment requirements (minimal)
-# This is what gets packaged for Lambda deployment
 # pandas/numpy/boto3 provided by AWS Lambda Layer
+# Using pydantic v1 (no binary dependencies)
 
-fastapi==0.104.1
+fastapi==0.95.0
 mangum==0.17.0
-pydantic==2.5.0
+pydantic==1.10.12
 yfinance==0.2.32
 
