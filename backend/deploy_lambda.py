@@ -28,15 +28,35 @@ def create_deployment_package():
     
     package_dir.mkdir()
     
-    # Install dependencies
-    print("\nInstalling dependencies...")
+    # Copy dependencies from venv (skip pandas/numpy/boto3 - provided by Layer)
+    print("\nCopying dependencies from venv...")
     print("NOTE: pandas/numpy/boto3 will be provided by AWS Lambda Layer\n")
     
-    subprocess.run([
-        "pip", "install",
-        "-r", "requirements-lambda.txt",
-        "-t", str(package_dir)
-    ], check=True)
+    skip = {'pip', 'setuptools', 'wheel', 'pytest', 'httpx', '_distutils_hack',
+            'pkg_resources', 'pandas', 'numpy', 'boto3', 'botocore', 's3transfer'}
+    
+    if not venv_site_packages.exists():
+        print("ERROR: venv not found")
+        return None
+    
+    for item in venv_site_packages.iterdir():
+        # Skip items
+        if any(item.name.lower().startswith(s.lower()) for s in skip):
+            continue
+        if item.name.startswith('~') or item.name == '__pycache__':
+            continue
+        if item.name.endswith('.dist-info') or item.name.endswith('.egg-info'):
+            continue
+            
+        try:
+            if item.is_dir():
+                print(f"  {item.name}")
+                shutil.copytree(item, package_dir / item.name,
+                              ignore=shutil.ignore_patterns('*.pyc', '__pycache__', 'tests', 'test'))
+            elif item.suffix == '.py':
+                shutil.copy2(item, package_dir / item.name)
+        except Exception as e:
+            pass  # Skip errors
     
     # Copy application code
     print("\nCopying application code...")
